@@ -1,0 +1,28 @@
+Package: MeDeCom.plot
+Title: Enhanced plots for MeDeCom
+Version: 0.0.1
+Authors@R: 
+    person(given = "Yoann",
+           family = "Pageaud",
+           role = c("aut", "cre"),
+           email = "y.pageaud@dkfz.de",
+           comment = c(ORCID = "0000-0002-1392-1744"))
+Description: MeDeCom.plot provides MeDeCom user with additionnal plots that they
+             can use to display results from a MeDeComSet.
+License: GPL (>= 3)
+Encoding: UTF-8
+Depends:
+    data.table,
+    ggplot2,
+    lattice,
+    MeDeCom,
+Imports:
+    quantmod,
+    ggrepel,
+    BiocompR
+Suggests:
+    RnBeads
+Roxygen: list(markdown = TRUE)
+VignetteBuilder: knitr
+biocViews: Software, Infrastructure, DataRepresentation
+RoxygenNote: 7.2.0
