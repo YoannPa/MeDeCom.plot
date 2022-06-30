@@ -113,7 +113,6 @@ errorplot3d <- function(
       text = list(lab = dt_minimas$legend_keys, cex = 0.95))
   } else { minimas_legend <- NULL }
   # Error plot
-  cat("TEST")
   err.plt <- lattice::wireframe(
     x = Error ~ Lambda * Kappa, data = dt_err, drape = TRUE, colorkey = TRUE,
     screen = list(z = -135, x = -80, y = 0), at = sort(dt_err$Error),
