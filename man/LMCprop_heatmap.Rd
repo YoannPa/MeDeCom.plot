@@ -39,7 +39,7 @@ margins
 default one for your plot.}
 }
 \value{
-A \code{type} object returned description.
+A \code{grob} plot of the proportion heatmap.
 }
 \description{
 Plots a heatmap of LMCs proportions in all methylation samples.

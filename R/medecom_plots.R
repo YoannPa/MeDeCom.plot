@@ -291,7 +291,7 @@ mds_plot <- function(
 #'                    (Default: margins = ggplot2::margin(0, 1.2, 0, 0, "cm")).
 #' @param plot.title  A \code{character} to specify another title than the
 #'                    default one for your plot.
-#' @return A \code{type} object returned description.
+#' @return A \code{grob} plot of the proportion heatmap.
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
@@ -337,4 +337,130 @@ LMCprop_heatmap <- function(
       barwidth = 15, ticks.colour = "red", frame.colour = "black"),
     plot.labs = ggplot2::labs(title = plot.title))
   return(prop_heatmap)
+}
+
+#' Plots a UPGMA dendrogram clustering of LMCs with reference methylomes
+#'
+#' @param MDCset      A \code{MeDeComSet} obtained with \link[MeDeCom]{runMeDeCom}.
+#' @param D           A methylation \code{matrix} you ran MeDeCom on.
+#' @param dt.ref      A \code{data.table} containing all reference methylomes (1
+#'                    methylome by column, and 1 beta value by row) you wish to
+#'                    include in the clustering with the LMCs. First column must
+#'                    contain methylation array probe IDs and be named
+#'                    "probeIDs".
+#' @param k           Am \code{integer} to specify the value of the kappa
+#'                    parameter.
+#' @param lambda      A \code{numeric} to specify the value of the lambda
+#'                    parameter.
+#' @param cor.method  A \code{character} to specify the method to use for
+#'                    computing correlation between LMCs and samples
+#'                    (Default: cor.method = 'pearson'; For a list of all
+#'                    supported correlation methods see \link[stats]{cor}).
+#' @param plot.title  A \code{character} to specify another title than the
+#'                    default one for your plot.
+#' @param orientation A \code{character} to specify whether the dendrogram
+#'                    should be displayed vertically
+#'                    (Default: orientation = 'v') or horizontally
+#'                    (orientation = 'h').
+#' @return A \code{gg} plot of the dendrogram.
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' # Load the example data sets
+#' data(example.dataset, package="MeDeCom")
+#' # Run MeDeCom (WARNING: takes 1 or 2 hours to complete)
+#' medecom.result <- runMeDeCom(
+#'   D, 2:10, c(0,10^(-5:-2)), NINIT=10, NFOLDS=10, ITERMAX=300, NCORES=9)
+#' # Prepare the reference data.table and give rownames to the methylation
+#' # matrix
+#' Tref <- as.data.table(Tref)
+#' Tref[, probeIDs := .I]
+#' cols <- colnames(Tref)[c(6,1:5)]
+#' Tref <- Tref[, ..cols, ]
+#' rownames(D) <- seq(nrow(D))
+#' # Plot a vertical clustering of LMCs and methylomes
+#' LMCs_dendrogram(
+#'   MDCset = medecom.result, D = D, dt.ref = data.table::as.data.table(Tref),
+#'   k = 5, lambda = 10^-2)
+#' # Plot an horizontal clustering of LMCs and methylomes
+#' LMCs_dendrogram(
+#'   MDCset = medecom.result, D = D, dt.ref = data.table::as.data.table(Tref),
+#'   k = 5, lambda = 10^-2, orientation = 'h')
+#' @references Lutsik P. et al., MeDeCom: discovery and quantification of latent
+#'             components of heterogeneous methylomes. Genome Biol. 2017 Mar
+#'             24;18(1):55. doi: 10.1186/s13059-017-1182-6. PMID: 28340624;
+#'             PMCID: PMC5366155.
+
+LMCs_dendrogram <- function(
+    MDCset, D, dt.ref, k, lambda, cor.method = "pearson", plot.title = NULL,
+    orientation = "v"){
+  That <- MeDeCom::getLMCs(MDCset, k, lambda, 1)
+  rownames(That) <- rownames(D)
+  colnames(That) <- paste("LMC", 1:ncol(That), sep = "")
+  Tref <- as.matrix(x = dt.ref, rownames = "probeIDs")
+  Tref <- Tref[rownames(Tref)[rownames(Tref) %in% rownames(That)], ]
+
+  mdd <- cbind(That, Tref)
+  mdd <- mdd[complete.cases(mdd), ]
+  d <- as.dist(1 - cor(mdd, method = cor.method))
+  hcl_obj <- hclust(d, method = "average")
+  hcdata <- ggdendro::dendro_data(model = hcl_obj, type = "rectangle")
+  ddplot <- ggplot2::ggplot() +
+    ggplot2::geom_segment(
+      data = ggdendro::segment(hcdata),
+      mapping = ggplot2::aes(x = x, y = y, xend = xend, yend = yend))
+  hcdata.labs <- data.table::as.data.table(hcdata$labels)
+  hcdata.labs[label %like% "LMC\\d*", data_type := "LMCs"]
+  hcdata.labs[is.na(data_type), data_type := "ref_methylomes"]
+
+  #Draw the dendrogram
+  if(is.null(plot.title)){
+    plot.title <- "UPGMA clustering of reference methylomes with\nLatent Methylation Components (LMCs)"
+  }
+  substr(x = cor.method, 1, 1) <- toupper(substr(x = cor.method, 1, 1))
+  xlab_col <- ifelse(hcdata.labs$data_type == "LMCs", "blue", "red3")
+  if(orientation == "v"){
+    ddplot <- ddplot +
+      ggplot2::scale_x_reverse(
+        breaks = hcdata$labels$x, labels = hcdata$labels$label,
+        position = "top", expand = ggplot2::expansion(add = c(0.5, 0.5))) +
+      ggplot2::scale_y_reverse(expand = ggplot2::expansion(add = c(0, 0))) +
+      ggplot2::theme(
+        axis.text.y.right = ggplot2::element_text(
+          size = 10, hjust = 0, vjust = 0.5, color = xlab_col),
+        axis.ticks.y.right = ggplot2::element_blank(),
+        axis.text.x = ggplot2::element_text(size = 11),
+        axis.title = ggplot2::element_text(size = 12),
+        panel.grid.major.x = ggplot2::element_line(color = "grey"),
+        panel.background = ggplot2::element_blank(),
+        plot.margin = ggplot2::margin(0.1, 0.1, 0.1, 0.1, unit = "cm"),
+        plot.title = ggplot2::element_text(hjust = 0)) +
+      ggplot2::coord_flip()
+  } else if(orientation == "h"){
+    ddplot <- ddplot +
+      ggplot2::scale_x_continuous(
+        breaks = hcdata$labels$x, labels = hcdata$labels$label,
+        expand = ggplot2::expansion(add = c(0.5, 0.5))) +
+      ggplot2::scale_y_continuous(expand = ggplot2::expansion(add = c(0, 0))) +
+      ggplot2::theme(
+        axis.text.x = ggplot2::element_text(
+          size = 10, hjust = 1, vjust = 0.5, angle = 90, color = xlab_col),
+        axis.ticks.x = ggplot2::element_blank(),
+        axis.text.y = ggplot2::element_text(size = 11),
+        axis.title = ggplot2::element_text(size = 12),
+        panel.grid.major.y = ggplot2::element_line(color = "grey"),
+        panel.grid.major.x = ggplot2::element_blank(),
+        panel.background = ggplot2::element_blank(),
+        plot.margin = ggplot2::margin(0.1, 0.1, 0.1, 0.1, unit = "cm"),
+        plot.title = ggplot2::element_text(hjust = 0.5))
+
+  } else { stop("Orientation not supported. Use either 'h' or 'v'.") }
+  #Add plot labels
+  ddplot <- ddplot + ggplot2::labs(
+    x = "Cell type methylomes & LMCs",
+    y = paste0(cor.method, "-based distance (1-r)"),
+    title = plot.title)
+
+  #Return ggplot dendrogram
+  return(ddplot)
 }

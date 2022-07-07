@@ -1,6 +1,6 @@
 Package: MeDeCom.plot
-Title: Enhanced plots for MeDeCom
-Version: 0.0.3
+Title: Enhanced plots for MeDeCom results
+Version: 0.0.4
 Authors@R: 
     person(given = "Yoann",
            family = "Pageaud",
@@ -15,11 +15,12 @@ Depends:
     data.table,
     ggplot2,
     lattice,
-    MeDeCom,
+    MeDeCom
 Imports:
-    quantmod,
+    BiocompR,
     ggrepel,
-    BiocompR
+    quantmod,
+    ggdendro
 Suggests:
     RnBeads
 Roxygen: list(markdown = TRUE)
