@@ -341,17 +341,14 @@ LMCprop_heatmap <- function(
 
 #' Plots a UPGMA dendrogram clustering of LMCs with reference methylomes
 #'
-#' @param MDCset      A \code{MeDeComSet} obtained with \link[MeDeCom]{runMeDeCom}.
-#' @param D           A methylation \code{matrix} you ran MeDeCom on.
-#' @param dt.ref      A \code{data.table} containing all reference methylomes (1
+#' @param LMC_mat     A \code{matrix} containing LMCs decomposition values for
+#'                    the matching methylation data. You can obtain this matrix
+#'                    using \link[MeDeCom]{getLMCs} on your MeDeComSet.
+#'                    Importantly, row names must match those used for Tref.
+#' @param Tref        A \code{matrix} containing all reference methylomes (1
 #'                    methylome by column, and 1 beta value by row) you wish to
-#'                    include in the clustering with the LMCs. First column must
-#'                    contain methylation array probe IDs and be named
-#'                    "probeIDs".
-#' @param k           Am \code{integer} to specify the value of the kappa
-#'                    parameter.
-#' @param lambda      A \code{numeric} to specify the value of the lambda
-#'                    parameter.
+#'                    include in the clustering with the LMCs. Row names must
+#'                    match those used for LMC_mat.
 #' @param cor.method  A \code{character} to specify the method to use for
 #'                    computing correlation between LMCs and samples
 #'                    (Default: cor.method = 'pearson'; For a list of all
@@ -392,16 +389,21 @@ LMCprop_heatmap <- function(
 #'             PMCID: PMC5366155.
 
 LMCs_dendrogram <- function(
-    MDCset, D, dt.ref, k, lambda, cor.method = "pearson", plot.title = NULL,
+    LMC_mat, Tref, cor.method = "pearson", plot.title = NULL,
     orientation = "v"){
-  That <- MeDeCom::getLMCs(MDCset, k, lambda, 1)
-  rownames(That) <- rownames(D)
-  colnames(That) <- paste("LMC", 1:ncol(That), sep = "")
-  Tref <- as.matrix(x = dt.ref, rownames = "probeIDs")
-  Tref <- Tref[rownames(Tref)[rownames(Tref) %in% rownames(That)], ]
-
-  mdd <- cbind(That, Tref)
+  # That <- MeDeCom::getLMCs(MDCset, k, lambda, 1)
+  # rownames(That) <- rownames(D)
+  colnames(LMC_mat) <- paste("LMC", 1:ncol(LMC_mat), sep = "")
+  # Tref <- as.matrix(x = dt.ref, rownames = "probeIDs")
+  Tref <- Tref[rownames(Tref)[rownames(Tref) %in% rownames(LMC_mat)], ]
+  # Convert as data.table Tref & LMC_mat
+  dt_LMC <- as.data.table(LMC_mat, keep.rownames = "probeIDs")
+  dt_Tref <- as.data.table(Tref, keep.rownames = "probeIDs")
+  mdd <- merge(x = dt_LMC, y = dt_Tref, by = "probeIDs")
+  # mdd <- cbind(LMC_mat, Tref)
   mdd <- mdd[complete.cases(mdd), ]
+  # Convert as matrix
+  mdd <- as.matrix(x = mdd, rownames = "probeIDs")
   d <- as.dist(1 - cor(mdd, method = cor.method))
   hcl_obj <- hclust(d, method = "average")
   hcdata <- ggdendro::dendro_data(model = hcl_obj, type = "rectangle")

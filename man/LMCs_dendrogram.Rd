@@ -5,32 +5,23 @@
 \title{Plots a UPGMA dendrogram clustering of LMCs with reference methylomes}
 \usage{
 LMCs_dendrogram(
-  MDCset,
-  D,
-  dt.ref,
-  k,
-  lambda,
+  LMC_mat,
+  Tref,
   cor.method = "pearson",
   plot.title = NULL,
   orientation = "v"
 )
 }
 \arguments{
-\item{MDCset}{A \code{MeDeComSet} obtained with \link[MeDeCom]{runMeDeCom}.}
+\item{LMC_mat}{A \code{matrix} containing LMCs decomposition values for
+the matching methylation data. You can obtain this matrix
+using \link[MeDeCom]{getLMCs} on your MeDeComSet.
+Importantly, row names must match those used for Tref.}
 
-\item{D}{A methylation \code{matrix} you ran MeDeCom on.}
-
-\item{dt.ref}{A \code{data.table} containing all reference methylomes (1
+\item{Tref}{A \code{matrix} containing all reference methylomes (1
 methylome by column, and 1 beta value by row) you wish to
-include in the clustering with the LMCs. First column must
-contain methylation array probe IDs and be named
-"probeIDs".}
-
-\item{k}{Am \code{integer} to specify the value of the kappa
-parameter.}
-
-\item{lambda}{A \code{numeric} to specify the value of the lambda
-parameter.}
+include in the clustering with the LMCs. Row names must
+match those used for LMC_mat.}
 
 \item{cor.method}{A \code{character} to specify the method to use for
 computing correlation between LMCs and samples
