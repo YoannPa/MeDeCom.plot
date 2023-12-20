@@ -1,6 +1,6 @@
 Package: MeDeCom.plot
 Title: Enhanced plots for MeDeCom results
-Version: 0.0.5
+Version: 0.0.6
 Authors@R: 
     person(given = "Yoann",
            family = "Pageaud",

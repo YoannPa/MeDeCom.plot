@@ -390,7 +390,7 @@ LMCprop_heatmap <- function(
 
 LMCs_dendrogram <- function(
     LMC_mat, Tref, cor.method = "pearson", plot.title = NULL,
-    orientation = "v"){
+    orientation = "v", lmc_col = "royalblue", ref_col = "red3"){
   # That <- MeDeCom::getLMCs(MDCset, k, lambda, 1)
   # rownames(That) <- rownames(D)
   colnames(LMC_mat) <- paste("LMC", 1:ncol(LMC_mat), sep = "")
@@ -410,7 +410,19 @@ LMCs_dendrogram <- function(
   ddplot <- ggplot2::ggplot() +
     ggplot2::geom_segment(
       data = ggdendro::segment(hcdata),
-      mapping = ggplot2::aes(x = x, y = y, xend = xend, yend = yend))
+      mapping = ggplot2::aes(x = x, y = y, xend = xend, yend = yend)) +
+    dummy_guide(
+      labels = c(
+        "MeDeCom latent methylation components from 450K tumor samples",
+        "WGBS cell types methylomes tailored for 450K"),
+      fill   = c(lmc_col, ref_col),
+      colour = c(lmc_col, ref_col),
+      size = 4,
+      key = draw_key_polygon) +
+    theme(
+      legend.position = "bottom", legend.justification = c(0, 0),
+      legend.text = element_text(size = 11), legend.key = element_blank(),
+      legend.key.size = unit(0.5, 'cm'))
   hcdata.labs <- data.table::as.data.table(hcdata$labels)
   hcdata.labs[label %like% "LMC\\d*", data_type := "LMCs"]
   hcdata.labs[is.na(data_type), data_type := "ref_methylomes"]
@@ -420,7 +432,7 @@ LMCs_dendrogram <- function(
     plot.title <- "UPGMA clustering of reference methylomes with\nLatent Methylation Components (LMCs)"
   }
   substr(x = cor.method, 1, 1) <- toupper(substr(x = cor.method, 1, 1))
-  xlab_col <- ifelse(hcdata.labs$data_type == "LMCs", "blue", "red3")
+  xlab_col <- ifelse(hcdata.labs$data_type == "LMCs", lmc_col, ref_col)
   if(orientation == "v"){
     ddplot <- ddplot +
       ggplot2::scale_x_reverse(
@@ -429,14 +441,15 @@ LMCs_dendrogram <- function(
       ggplot2::scale_y_reverse(expand = ggplot2::expansion(add = c(0, 0))) +
       ggplot2::theme(
         axis.text.y.right = ggplot2::element_text(
-          size = 10, hjust = 0, vjust = 0.5, color = xlab_col),
+          size = 10, hjust = 0, vjust = 0.5, color = xlab_col, face = "bold"),
         axis.ticks.y.right = ggplot2::element_blank(),
         axis.text.x = ggplot2::element_text(size = 11),
         axis.title = ggplot2::element_text(size = 12),
         panel.grid.major.x = ggplot2::element_line(color = "grey"),
         panel.background = ggplot2::element_blank(),
         plot.margin = ggplot2::margin(0.1, 0.1, 0.1, 0.1, unit = "cm"),
-        plot.title = ggplot2::element_text(hjust = 0)) +
+        plot.title = ggplot2::element_text(hjust = 0),
+        legend.direction = "vertical") +
       ggplot2::coord_flip()
   } else if(orientation == "h"){
     ddplot <- ddplot +
@@ -446,7 +459,8 @@ LMCs_dendrogram <- function(
       ggplot2::scale_y_continuous(expand = ggplot2::expansion(add = c(0, 0))) +
       ggplot2::theme(
         axis.text.x = ggplot2::element_text(
-          size = 10, hjust = 1, vjust = 0.5, angle = 90, color = xlab_col),
+          size = 10, hjust = 1, vjust = 0.5, angle = 90, color = xlab_col,
+          face = "bold"),
         axis.ticks.x = ggplot2::element_blank(),
         axis.text.y = ggplot2::element_text(size = 11),
         axis.title = ggplot2::element_text(size = 12),
@@ -457,7 +471,7 @@ LMCs_dendrogram <- function(
         plot.title = ggplot2::element_text(hjust = 0.5))
 
   } else { stop("Orientation not supported. Use either 'h' or 'v'.") }
-  #Add plot labels
+  # Add plot labels
   ddplot <- ddplot + ggplot2::labs(
     x = "Cell type methylomes & LMCs",
     y = paste0(cor.method, "-based distance (1-r)"),
@@ -465,4 +479,52 @@ LMCs_dendrogram <- function(
 
   #Return ggplot dendrogram
   return(ddplot)
+}
+
+
+#' Creates a dummy legend for ggplot2 graph.
+#'
+#' @param labels     A \code{character} vector specifying the legend keys
+#'                   labels.
+#' @param title      A \code{character} specifying the legend title.
+#' @param key        A ggplot2 legend key glyph (e.g. 'draw_key_point',
+#'                   'draw_key_polygon', or 'draw_key_text').
+#' @param guide_args A \code{list} to pass more aesthetic override elements.
+#' @return A \code{type} object returned description.
+#' @author Yoann Pageaud.
+#' @references [Creating completely customized legends in ggplot2](
+#' https://stackoverflow.com/questions/70977700/creating-completely-customized-legends-in-ggplot2)
+#' @keywords internal
+
+dummy_guide <- function(
+    labels = NULL, ..., title = NULL, key = draw_key_point,
+    guide_args = list()){
+  # Capture arguments
+  aesthetics <- list(...)
+  n <- max(lengths(aesthetics), 0)
+  if(is.null(labels)){ labels <- seq_len(n) }
+  # labels <- labels %||% seq_len(n)
+
+  # Overrule the alpha = 0 that we use to hide the points
+  if(is.null(aesthetics$alpha)){ aesthetics$alpha <- rep(1, n) }
+  # aesthetics$alpha <- aesthetics$alpha %||% rep(1, n)
+
+  # Construct guide
+  if(is.null(guide_args$override.aes)){ guide_args$override.aes <- aesthetics }
+  # guide_args$override.aes <- guide_args$override.aes %||% aesthetics
+  guide <- do.call(guide_legend, guide_args)
+
+  # Allow dummy aesthetic
+  update_geom_defaults("point", list(dummy = "x"))
+
+  dummy_geom <- geom_point(
+    data = data.frame(x = rep(Inf, n), y = rep(Inf, n),
+                      dummy = factor(labels)),
+    aes(x, y, dummy = dummy), alpha = 0, key_glyph = key
+  )
+  dummy_scale <- discrete_scale(
+    "dummy", "dummy_scale", palette = scales::identity_pal(), name = title,
+    guide = guide
+  )
+  list(dummy_geom, dummy_scale)
 }

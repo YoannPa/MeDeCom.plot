@@ -9,7 +9,9 @@ LMCs_dendrogram(
   Tref,
   cor.method = "pearson",
   plot.title = NULL,
-  orientation = "v"
+  orientation = "v",
+  lmc_col = "royalblue",
+  ref_col = "red3"
 )
 }
 \arguments{
