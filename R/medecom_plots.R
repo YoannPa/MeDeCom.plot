@@ -411,7 +411,7 @@ LMCs_dendrogram <- function(
     ggplot2::geom_segment(
       data = ggdendro::segment(hcdata),
       mapping = ggplot2::aes(x = x, y = y, xend = xend, yend = yend)) +
-    dummy_guide(
+    MeDeCom.plot:::dummy_guide(
       labels = c(
         "MeDeCom latent methylation components from 450K tumor samples",
         "WGBS cell types methylomes tailored for 450K"),
@@ -447,7 +447,7 @@ LMCs_dendrogram <- function(
         axis.title = ggplot2::element_text(size = 12),
         panel.grid.major.x = ggplot2::element_line(color = "grey"),
         panel.background = ggplot2::element_blank(),
-        plot.margin = ggplot2::margin(0.1, 0.1, 0.1, 0.1, unit = "cm"),
+        plot.margin = ggplot2::margin(0.1, 0.1, 0.1, 0.5, unit = "cm"),
         plot.title = ggplot2::element_text(hjust = 0),
         legend.direction = "vertical") +
       ggplot2::coord_flip()
