@@ -12,7 +12,7 @@ _**MeDeCom.plot** provides MeDeCom user with additionnal plots that they can use
 ![GitHub R package version](https://img.shields.io/github/r-package/v/YoannPa/MeDeCom.plot?label=Package%20version&logo=RStudio&logoColor=white&style=for-the-badge)  
 <img src="https://img.shields.io/static/v1?label=compatibility&message=4.2.0&color=blue&logo=R&logoColor=white&style=for-the-badge" />  
 ![GitHub last commit](https://img.shields.io/github/last-commit/YoannPa/MeDeCom.plot?logo=git&style=for-the-badge)  
-![GitHub](https://img.shields.io/github/license/YoannPa/MeDeCom.plot?color=brightgreen&style=for-the-badge)  
+![GitHub](https://img.shields.io/github/license/YoannPa/MeDeCom.plot?style=for-the-badge&color=brightgreen)  
 
 
 ## Prerequisites (install MeDeCom, RnBeads, BiocompR, and Bioconductor dependencies)
