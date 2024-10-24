@@ -33,7 +33,7 @@ devtools::install_github("YoannPa/MeDeCom.plot")
 ```
 
 ## Content
-Currently the package MeDeCom.plot contains **40 exported functions**:
+Currently the package MeDeCom.plot contains **5 exported functions**:
 
 * `cve_plot3d()` - Plots MeDeComSet C.V. error following kappa and lambda values tested.  
 * `LMCprop_heatmap()` - Plots a heatmap of LMCs proportions in all methylation samples.  
